@@ -11,7 +11,7 @@ user_controller = controllers.UserController()
 
 class DepartmentView:
     @staticmethod
-    def create_department_view():
+    def create_view():
         window = tk.Tk()
 
         name_label = tk.Label(window, text="Имя департамента")
@@ -34,7 +34,7 @@ class DepartmentView:
         window.mainloop()
 
     @staticmethod
-    def get_all_departments_view():
+    def get_all_view():
         window = tk.Tk()
 
         departments = department_controller.get_all()
@@ -64,7 +64,7 @@ class DepartmentView:
 class UserView:
 
     @staticmethod
-    def create_user():
+    def create_view():
         window = tk.Tk()
 
         # User name
@@ -96,5 +96,33 @@ class UserView:
 
         button = tk.Button(window, text="Создать пользователя", command=on_click)
         button.pack(padx=4, pady=4)
+
+        window.mainloop()
+
+    @staticmethod
+    def get_all_view():
+        window = tk.Tk()
+
+        users = user_controller.get_all()
+        for user in users:
+            frame = tk.Frame(window)  # TODO: fix removing
+            frame.pack()
+
+            label = tk.Label(frame, text=f"{user['department_name']}, {user['name']}")
+            label.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def on_click(user_id):
+                try:
+                    response_message = user_controller.remove(user_id)
+                    messagebox.showinfo("Успешно", message=response_message)
+                except ValueError as e:
+                    messagebox.showinfo("Ошибка", message=str(e))
+                finally:
+                    frame.destroy()
+
+            button = tk.Button(frame,
+                               text="Удалить",
+                               command=lambda user_id=user["id"]: on_click(user_id))
+            button.pack(side=tk.LEFT, padx=4, pady=4)
 
         window.mainloop()

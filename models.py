@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DATE
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -25,9 +25,7 @@ class User(Base):
     def __init__(self, name, department_name, equipments=None):
         self.name = name
         self.department_name = department_name
-        if equipments is None:
-            equipments = []
-        self.equipments = equipments
+        self.equipments = equipments or []
 
 
 class EquipmentModel(Base):
@@ -36,11 +34,15 @@ class EquipmentModel(Base):
     name = Column(String, primary_key=True)
     max_term_of_use_in_days = Column(Integer, nullable=False)
 
+    def __init__(self, name, max_term_of_use_in_days):
+        self.name = name
+        self.max_term_of_use_in_days = max_term_of_use_in_days
+
 
 class Equipment(Base):
-    __tablename__ = 'equipment'
+    __tablename__ = 'equipments'
 
     inventory_number = Column(String, primary_key=True)
-    model_name = Column(String, ForeignKey('equipment_models.name'))
-    term_of_use_in_days = Column(Integer, nullable=False)
+    model_name = Column(String, ForeignKey('equipment_models.name'), nullable=False)
+    start_of_using = Column(DATE, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
