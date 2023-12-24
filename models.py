@@ -8,8 +8,7 @@ Base = declarative_base()
 class Department(Base):
     __tablename__ = 'departments'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, primary_key=True, nullable=False)
 
     def __init__(self, name):
         self.name = name
@@ -19,9 +18,16 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    department_id = Column(Integer, ForeignKey('departments.id'))
+    department_name = Column(String, ForeignKey('departments.name'))
     name = Column(String, nullable=False)
     equipments = relationship('Equipment', backref='owner')
+
+    def __init__(self, name, department_name, equipments=None):
+        self.name = name
+        self.department_name = department_name
+        if equipments is None:
+            equipments = []
+        self.equipments = equipments
 
 
 class EquipmentModel(Base):
