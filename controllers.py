@@ -14,6 +14,11 @@ class DepartmentController:
     def get_all():
         return department_service.get_all()
 
+    @staticmethod
+    def remove(name: str):
+        department_service.remove(name)
+        return f"Департамент {name} успешно удалён"
+
 
 class UserController:
 

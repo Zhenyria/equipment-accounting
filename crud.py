@@ -19,6 +19,13 @@ class DepartmentOperations:
     def get_all(db: Session):
         return db.query(models.Department).all()
 
+    @staticmethod
+    def remove(db: Session, name: str):
+        department = DepartmentOperations.get(db, name)
+        if department is not None:
+            db.delete(department)
+            db.commit()
+
 
 class UserOperations:
     @staticmethod
@@ -28,6 +35,9 @@ class UserOperations:
         db.refresh(user)
         return user
 
+    @staticmethod
+    def get_all_by_department_name(db: Session, department_name: str):
+        return db.query(models.User).filter(models.User.department_name == department_name).all()
 
 class EquipmentModelOperations:
     @staticmethod

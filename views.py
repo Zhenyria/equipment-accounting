@@ -39,8 +39,24 @@ class DepartmentView:
 
         departments = department_controller.get_all()
         for department in departments:
-            label = tk.Label(window, text=str(department))
-            label.pack(padx=4, pady=4)
+            frame = tk.Frame(window)
+            frame.pack()
+
+            label = tk.Label(frame, text=str(department))
+            label.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def on_click(department_name):
+                try:
+                    response_message = department_controller.remove(department_name)
+                    messagebox.showinfo("Успешно", message=response_message)
+                    frame.destroy()
+                except ValueError as e:
+                    messagebox.showinfo("Ошибка", message=str(e))
+
+            button = tk.Button(frame,
+                               text="Удалить",
+                               command=lambda department_name=department: on_click(department_name))
+            button.pack(side=tk.LEFT, padx=4, pady=4)
 
         window.mainloop()
 

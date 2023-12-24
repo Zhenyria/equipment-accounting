@@ -22,6 +22,15 @@ class DepartmentService:
         with database.get_session() as session:
             return [department.name for department in DepartmentOperations.get_all(session)]
 
+    @staticmethod
+    def remove(name: str):
+        relates_users = UserService.get_all_by_department(name)
+        if len(relates_users) != 0:
+            raise ValueError(f"Департамент {name} имеет связанных пользователей и не может быть удалён")
+
+        with database.get_session() as session:
+            DepartmentOperations.remove(session, name)
+
 
 class UserService:
 
@@ -31,3 +40,8 @@ class UserService:
             if DepartmentService.get(department_name) is None:
                 raise ValueError(f"Департамент {department_name} не найден")
             return UserOperations.create(session, User(name=name, department_name=department_name))
+
+    @staticmethod
+    def get_all_by_department(department_name: str):
+        with database.get_session() as session:
+            return UserOperations.get_all_by_department_name(session, department_name)
