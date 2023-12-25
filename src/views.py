@@ -230,3 +230,38 @@ class EquipmentView:
         button.pack(padx=4, pady=4)
 
         window.mainloop()
+
+    @staticmethod
+    def get_all_view():
+        window = tk.Tk()
+
+        equipments = equipment_controller.get_all()
+        for equipment in equipments:
+            frame = tk.Frame(window)  # TODO: fix removing. variables scope is other in python
+            frame.pack()
+
+            owner_name = equipment.user_name
+            is_expired = equipment.is_expired
+            label = tk.Label(frame,
+                             text=f"{equipment.model_name} {equipment.inventory_number}. "
+                                  f"Ответственный: {owner_name if owner_name is not None else 'отсутствует'}"
+                                  f"{'. Подлежит замене' if is_expired else ''}",
+                             fg="red" if is_expired else "black")
+            label.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def on_click(inventory_number):
+                try:
+                    response_message = equipment_controller.remove(inventory_number)
+                    messagebox.showinfo("Успешно", message=response_message)
+                    frame.destroy()
+                except ValueError as e:
+                    messagebox.showinfo("Ошибка", message=str(e))
+
+            button = tk.Button(
+                frame,
+                text="Удалить",
+                command=lambda inventory_number=equipment.inventory_number: on_click(inventory_number)
+            )
+            button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        window.mainloop()

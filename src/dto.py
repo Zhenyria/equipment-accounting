@@ -23,7 +23,7 @@ def convert_to_dtos(equipments: list[Equipment], equipments_models: list[Equipme
                                                for equipments_model
                                                in equipments_models}
 
-    users_by_ids = {user.id: user for user in users}
+    users_by_ids = {user.id: user.name for user in users}
 
     dtos = []
     for equipment in equipments:
@@ -32,9 +32,9 @@ def convert_to_dtos(equipments: list[Equipment], equipments_models: list[Equipme
 
         is_expired = (start_of_using
                       + timedelta(days=max_terms_of_use_in_days_by_model_names[model_name])
-                      >= date.today())
+                      < date.today())
 
-        user_name = users_by_ids[equipment.user_id].name if equipment.user_id else None
+        user_name = users_by_ids[equipment.user_id] if equipment.user_id else None
 
         dtos.append(EquipmentDto(equipment.inventory_number,
                                  model_name,

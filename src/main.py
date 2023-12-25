@@ -66,11 +66,17 @@ def main():
     def on_click_create_equipment_view():
         equipment_view.create_view()
 
+    def on_click_show_equipment_view():
+        equipment_view.get_all_view()
+
     equipment_label = tk.Label(window, text="Оборудование")
     equipment_label.pack(padx=4, pady=4)
 
     create_equipment_button = tk.Button(window, text="Создать оборудование", command=on_click_create_equipment_view)
     create_equipment_button.pack(padx=4, pady=4)
+
+    show_all_equipment_button = tk.Button(window, text="Список оборудования", command=on_click_show_equipment_view)
+    show_all_equipment_button.pack(padx=4, pady=4)
 
     window.mainloop()
 

@@ -40,8 +40,10 @@ class UserOperations:
     def get_all(db: Session, ids: list[int] = None):
         query = db.query(models.User)
         if ids is not None:
-            query = query.filter(models.User.id in ids)
-        query.all()
+            if not ids:
+                return []
+            query = query.filter(models.User.id.in_(ids))
+        return query.all()
 
     @staticmethod
     def get(db: Session, id: int):
@@ -78,7 +80,9 @@ class EquipmentModelOperations:
     def get_all(db: Session, names: list[str] = None):
         query = db.query(models.EquipmentModel)
         if names is not None:
-            query = query.filter(models.EquipmentModel.name in names)
+            if not names:
+                return []
+            query = query.filter(models.EquipmentModel.name.in_(names))
         return query.all()
 
     @staticmethod

@@ -98,7 +98,11 @@ class EquipmentService:
         with database.get_session() as session:
             equipments = EquipmentOperations.get_all(session)
             equipments_models_names = [equipment.model_name for equipment in equipments]
-            users_ids = [equipment.user_id for equipment in equipments]
+            users_ids = []
+            for equipment in equipments:
+                user_id = equipment.user_id
+                if user_id is not None:
+                    users_ids.append(user_id)
             return convert_to_dtos(equipments,
                                    EquipmentModelService.get_all(equipments_models_names),
                                    UserService.get_all(users_ids))
@@ -108,15 +112,24 @@ class EquipmentService:
         with database.get_session() as session:
             equipments = EquipmentOperations.get_expired(session)
             equipments_models_names = [equipment.model_name for equipment in equipments]
-            users_ids = [equipment.user_id for equipment in equipments]
+            users_ids = []
+            for equipment in equipments:
+                user_id = equipment.user_id
+                if user_id is not None:
+                    users_ids.append(user_id)
             return convert_to_dtos(equipments,
                                    EquipmentModelService.get_all(equipments_models_names),
                                    UserService.get_all(users_ids))
 
     @staticmethod
     def set_owner(inventory_number: str, user_id: int):
-        return 0  # TODO
+        found_users = UserService.get_all([user_id])
+        if len(found_users) == 0:
+            raise ValueError(f"User with id {user_id} does not exist")
+        with database.get_session() as session:
+            EquipmentOperations.set_owner(session, inventory_number, user_id)
 
     @staticmethod
     def remove(inventory_number: str):
-        return 0  # TODO
+        with database.get_session() as session:
+            EquipmentOperations.remove(session, inventory_number)
