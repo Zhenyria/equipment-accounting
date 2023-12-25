@@ -1,6 +1,9 @@
+from datetime import date
+
 import database
-from crud import DepartmentOperations, UserOperations, EquipmentModelOperations
-from models import Department, User, EquipmentModel
+from crud import DepartmentOperations, UserOperations, EquipmentModelOperations, EquipmentOperations
+from dto import convert_to_dtos
+from models import Department, User, EquipmentModel, Equipment
 
 
 class DepartmentService:
@@ -42,9 +45,9 @@ class UserService:
             return UserOperations.create(session, User(name=name, department_name=department_name))
 
     @staticmethod
-    def get_all():
+    def get_all(ids: list[int] = None):
         with database.get_session() as session:
-            return UserOperations.get_all(session)
+            return UserOperations.get_all(session, ids)
 
     @staticmethod
     def get_all_by_department(department_name: str):
@@ -63,7 +66,7 @@ class EquipmentModelService:
         if EquipmentModelService.get(name) is not None:
             raise ValueError(f"Модель оборудования {name} уже существует")
         with database.get_session() as session:
-            return EquipmentModelOperations.create(session, EquipmentModel(name, max_term_of_use_in_days))
+            EquipmentModelOperations.create(session, EquipmentModel(name, max_term_of_use_in_days))
 
     @staticmethod
     def get(name: str):
@@ -71,9 +74,9 @@ class EquipmentModelService:
             return EquipmentModelOperations.get(session, name)
 
     @staticmethod
-    def get_all():
+    def get_all(names: list[str] = None):
         with database.get_session() as session:
-            return EquipmentModelOperations.get_all(session)
+            return EquipmentModelOperations.get_all(session, names)
 
     @staticmethod
     def remove(name: str):
@@ -83,16 +86,32 @@ class EquipmentModelService:
 
 class EquipmentService:
     @staticmethod
-    def create(inventory_number: str, model_name: int):
-        return 0  # TODO
+    def create(inventory_number: str, model_name: str):
+        equipment_model = EquipmentModelService.get(model_name)
+        if equipment_model is None:
+            raise ValueError(f"Модель оборудования {model_name} не найдена")
+        with database.get_session() as session:
+            return EquipmentOperations.create(session, Equipment(inventory_number, model_name, date.today()))
 
     @staticmethod
     def get_all():
-        return 0  # TODO
+        with database.get_session() as session:
+            equipments = EquipmentOperations.get_all(session)
+            equipments_models_names = [equipment.model_name for equipment in equipments]
+            users_ids = [equipment.user_id for equipment in equipments]
+            return convert_to_dtos(equipments,
+                                   EquipmentModelService.get_all(equipments_models_names),
+                                   UserService.get_all(users_ids))
 
     @staticmethod
     def get_expired():
-        return 0  # TODO
+        with database.get_session() as session:
+            equipments = EquipmentOperations.get_expired(session)
+            equipments_models_names = [equipment.model_name for equipment in equipments]
+            users_ids = [equipment.user_id for equipment in equipments]
+            return convert_to_dtos(equipments,
+                                   EquipmentModelService.get_all(equipments_models_names),
+                                   UserService.get_all(users_ids))
 
     @staticmethod
     def set_owner(inventory_number: str, user_id: int):

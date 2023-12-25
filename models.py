@@ -45,4 +45,9 @@ class Equipment(Base):
     inventory_number = Column(String, primary_key=True)
     model_name = Column(String, ForeignKey('equipment_models.name'), nullable=False)
     start_of_using = Column(DATE, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+
+    def __init__(self, inventory_number, model_name, start_of_using):
+        self.inventory_number = inventory_number
+        self.model_name = model_name
+        self.start_of_using = start_of_using

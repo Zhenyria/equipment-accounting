@@ -7,6 +7,8 @@ import controllers
 
 department_controller = controllers.DepartmentController()
 user_controller = controllers.UserController()
+equipment_model_controller = controllers.EquipmentModelController()
+equipment_controller = controllers.EquipmentController()
 
 
 class DepartmentView:
@@ -39,7 +41,7 @@ class DepartmentView:
 
         departments = department_controller.get_all()
         for department in departments:
-            frame = tk.Frame(window)
+            frame = tk.Frame(window)  # TODO: fix removing
             frame.pack()
 
             label = tk.Label(frame, text=str(department))
@@ -115,14 +117,75 @@ class UserView:
                 try:
                     response_message = user_controller.remove(user_id)
                     messagebox.showinfo("Успешно", message=response_message)
+                    frame.destroy()
                 except ValueError as e:
                     messagebox.showinfo("Ошибка", message=str(e))
-                finally:
-                    frame.destroy()
 
             button = tk.Button(frame,
                                text="Удалить",
                                command=lambda user_id=user["id"]: on_click(user_id))
+            button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        window.mainloop()
+
+
+class EquipmentModelView:
+
+    @staticmethod
+    def create_view():
+        window = tk.Tk()
+
+        name_label = tk.Label(window, text="Название оборудования")
+        name_label.pack(padx=4, pady=4)
+
+        name_entry = tk.Entry(window)
+        name_entry.pack(padx=4, pady=4)
+
+        max_term_of_use_in_days_label = tk.Label(window, text="Срок службы оборудования")
+        max_term_of_use_in_days_label.pack(padx=4, pady=4)
+
+        max_term_of_use_in_days_entry = tk.Entry(window)
+        max_term_of_use_in_days_entry.pack(padx=4, pady=4)
+
+        def on_click():
+            name = name_entry.get()
+            max_term_of_use_in_days = max_term_of_use_in_days_entry.get()
+            try:
+                equipment_model_controller.create(name, int(max_term_of_use_in_days))
+                messagebox.showinfo("Успешно", f"Модель оборудования {name} создана")
+            except ValueError as e:
+                messagebox.showinfo("Ошибка", message=str(e))
+
+        button = tk.Button(window, text="Создать модель оборудования", command=on_click)
+        button.pack(padx=4, pady=4)
+
+        window.mainloop()
+
+    @staticmethod
+    def get_all_view():
+        window = tk.Tk()
+
+        equipment_models_names = equipment_model_controller.get_all()
+        for equipment_model_name in equipment_models_names:
+            frame = tk.Frame(window)  # TODO: fix removing
+            frame.pack()
+
+            label = tk.Label(frame, text=equipment_model_name)
+            label.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def on_click(equipment_model_name):
+                try:
+                    response_message = equipment_model_controller.remove(equipment_model_name)
+                    messagebox.showinfo("Успешно", message=response_message)
+                    frame.destroy()
+                except ValueError as e:
+                    messagebox.showinfo("Ошибка", message=str(e))
+
+            button = tk.Button(
+                frame,
+                text="Удалить",
+                command=lambda removed_equipment_model_name=equipment_model_name: on_click(removed_equipment_model_name)
+            )
             button.pack(side=tk.LEFT, padx=4, pady=4)
 
         window.mainloop()

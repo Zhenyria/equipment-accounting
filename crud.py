@@ -37,8 +37,11 @@ class UserOperations:
         return user
 
     @staticmethod
-    def get_all(db: Session):
-        return db.query(models.User).all()
+    def get_all(db: Session, ids: list[int] = None):
+        query = db.query(models.User)
+        if ids is not None:
+            query = query.filter(models.User.id in ids)
+        query.all()
 
     @staticmethod
     def get(db: Session, id: int):
@@ -72,8 +75,11 @@ class EquipmentModelOperations:
         return db.query(models.EquipmentModel).filter(models.EquipmentModel.name == name).first()
 
     @staticmethod
-    def get_all(db: Session):
-        return db.query(models.EquipmentModel).all()
+    def get_all(db: Session, names: list[str] = None):
+        query = db.query(models.EquipmentModel)
+        if names is not None:
+            query = query.filter(models.EquipmentModel.name in names)
+        return query.all()
 
     @staticmethod
     def remove(db: Session, name: str):
@@ -103,6 +109,10 @@ class EquipmentOperations:
     @staticmethod
     def get_all_by_model_name(db: Session, model_name: str):
         return db.query(models.Equipment).filter(models.Equipment.model_name == model_name).all()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(models.Equipment).all()
 
     @staticmethod
     def get_expired(db: Session):

@@ -43,7 +43,7 @@ class UserController:
 class EquipmentModelController:
     @staticmethod
     def create(name: str, max_term_of_use_in_days: int):
-        return equipment_model_service.create(name, max_term_of_use_in_days).id
+        equipment_model_service.create(name, max_term_of_use_in_days)
 
     @staticmethod
     def get_all():
@@ -57,7 +57,7 @@ class EquipmentModelController:
 
 class EquipmentController:
     @staticmethod
-    def create(inventory_number: str, model_name: int):
+    def create(inventory_number: str, model_name: str):
         return equipment_service.create(inventory_number, model_name).id
 
     @staticmethod
