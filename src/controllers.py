@@ -58,23 +58,15 @@ class EquipmentModelController:
 class EquipmentController:
     @staticmethod
     def create(inventory_number: str, model_name: str):
-        return equipment_service.create(inventory_number, model_name).id
+        return equipment_service.create(inventory_number, model_name)
 
     @staticmethod
     def get_all():
-        return [{"inventory_number": equipment.inventory_number,
-                 "model_name": equipment.model_name,
-                 "is_related": equipment.user_id is not None}
-                for equipment
-                in equipment_service.get_all()]
+        return equipment_service.get_all()
 
     @staticmethod
     def get_expired():
-        return [{"inventory_number": equipment.inventory_number,
-                 "model_name": equipment.model_name,
-                 "is_related": equipment.user_id}
-                for equipment
-                in equipment_service.get_expired()]
+        return equipment_service.get_expired()
 
     @staticmethod
     def set_owner(inventory_number: str, user_id: int):

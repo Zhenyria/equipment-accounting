@@ -189,3 +189,44 @@ class EquipmentModelView:
             button.pack(side=tk.LEFT, padx=4, pady=4)
 
         window.mainloop()
+
+
+class EquipmentView:
+
+    @staticmethod
+    def create_view():
+        window = tk.Tk()
+
+        # Inventory number
+        inventory_number_label = tk.Label(window, text="Инвентарный номер")
+        inventory_number_label.pack(padx=4, pady=4)
+
+        inventory_number_entry = tk.Entry(window)
+        inventory_number_entry.pack(padx=4, pady=4)
+
+        # Equipment model
+        equipment_model_label = tk.Label(window, text="Модель оборудования")
+        equipment_model_label.pack(padx=4, pady=4)
+
+        equipment_models = equipment_model_controller.get_all()
+
+        equipment_model_field = tk.StringVar(window)
+        equipment_model_ddl = ttk.Combobox(window, textvariable=equipment_model_field, values=list(equipment_models))
+        equipment_model_ddl.pack(padx=4, pady=4)
+
+        def on_click():
+            inventory_number = inventory_number_entry.get()
+            equipment_model = equipment_model_field.get()
+            try:
+                equipment_controller.create(inventory_number, equipment_model)
+                messagebox.showinfo(
+                    "Успешно",
+                    f"Оборудование {equipment_model} с инвентарным номером {inventory_number} зарегистрировано"
+                )
+            except ValueError as e:
+                messagebox.showinfo("Ошибка", message=str(e))
+
+        button = tk.Button(window, text="Создать оборудование", command=on_click)
+        button.pack(padx=4, pady=4)
+
+        window.mainloop()

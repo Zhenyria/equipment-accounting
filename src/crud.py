@@ -88,7 +88,7 @@ class EquipmentModelOperations:
             related_equipments = EquipmentOperations.get_all_by_model_name(db, name)
             if len(related_equipments) > 0:
                 raise ValueError(
-                    f"Невозможно удалить наименование {name}, так как с данным наименованим найдено оборудование"
+                    f"Невозможно удалить наименование {name}, так как найдено оборудование с данным наименованим"
                 )
             db.delete(equipment_model)
             db.commit()
@@ -97,6 +97,9 @@ class EquipmentModelOperations:
 class EquipmentOperations:
     @staticmethod
     def create(db: Session, equipment: models.Equipment):
+        inventory_number = equipment.inventory_number
+        if EquipmentOperations.get(db, inventory_number) is not None:
+            raise ValueError(f'Оборудование с инвентарным номером {inventory_number} уже существует')
         db.add(equipment)
         db.commit()
         db.refresh(equipment)
