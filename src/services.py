@@ -130,6 +130,11 @@ class EquipmentService:
             EquipmentOperations.set_owner(session, inventory_number, user_id)
 
     @staticmethod
+    def remove_owner(inventory_number: str):
+        with database.get_session() as session:
+            EquipmentOperations.remove_owner(session, inventory_number)
+
+    @staticmethod
     def remove(inventory_number: str):
         with database.get_session() as session:
             EquipmentOperations.remove(session, inventory_number)

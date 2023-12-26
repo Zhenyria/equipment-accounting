@@ -74,6 +74,11 @@ class EquipmentController:
         return f"Оборудование {inventory_number} передано пользователю {user_id}"
 
     @staticmethod
+    def remove_owner(inventory_number: str):
+        equipment_service.remove_owner(inventory_number)
+        return f"Оборудование {inventory_number} отвязано от пользователя"
+
+    @staticmethod
     def remove(inventory_number: str):
         equipment_service.remove(inventory_number)
         return f"Оборудование {inventory_number} успешно удалено"

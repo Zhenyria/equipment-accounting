@@ -28,7 +28,7 @@ class DepartmentView:
                 created_department_name = department_controller.create(name)
                 messagebox.showinfo("Успешно", f"Департамент {created_department_name} создан")
             except ValueError as e:
-                messagebox.showinfo("Ошибка", message=str(e))
+                messagebox.showerror("Ошибка", message=str(e))
 
         button = tk.Button(window, text="Создать департамент", command=on_click)
         button.pack(padx=4, pady=4)
@@ -53,7 +53,7 @@ class DepartmentView:
                     messagebox.showinfo("Успешно", message=response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showinfo("Ошибка", message=str(e))
+                    messagebox.showerror("Ошибка", message=str(e))
 
             button = tk.Button(frame,
                                text="Удалить",
@@ -94,7 +94,7 @@ class UserView:
                 user_id = user_controller.create(name, department_name)
                 messagebox.showinfo("Выполнено", f"Пользователь {user_id} успешно создан")
             except ValueError as e:
-                messagebox.showinfo("Ошибка", message=str(e))
+                messagebox.showerror("Ошибка", message=str(e))
 
         button = tk.Button(window, text="Создать пользователя", command=on_click)
         button.pack(padx=4, pady=4)
@@ -119,7 +119,7 @@ class UserView:
                     messagebox.showinfo("Успешно", message=response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showinfo("Ошибка", message=str(e))
+                    messagebox.showerror("Ошибка", message=str(e))
 
             button = tk.Button(frame,
                                text="Удалить",
@@ -154,7 +154,7 @@ class EquipmentModelView:
                 equipment_model_controller.create(name, int(max_term_of_use_in_days))
                 messagebox.showinfo("Успешно", f"Модель оборудования {name} создана")
             except ValueError as e:
-                messagebox.showinfo("Ошибка", message=str(e))
+                messagebox.showerror("Ошибка", message=str(e))
 
         button = tk.Button(window, text="Создать модель оборудования", command=on_click)
         button.pack(padx=4, pady=4)
@@ -179,7 +179,7 @@ class EquipmentModelView:
                     messagebox.showinfo("Успешно", message=response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showinfo("Ошибка", message=str(e))
+                    messagebox.showerror("Ошибка", message=str(e))
 
             button = tk.Button(
                 frame,
@@ -224,7 +224,7 @@ class EquipmentView:
                     f"Оборудование {equipment_model} с инвентарным номером {inventory_number} зарегистрировано"
                 )
             except ValueError as e:
-                messagebox.showinfo("Ошибка", message=str(e))
+                messagebox.showerror("Ошибка", message=str(e))
 
         button = tk.Button(window, text="Создать оборудование", command=on_click)
         button.pack(padx=4, pady=4)
@@ -249,19 +249,76 @@ class EquipmentView:
                              fg="red" if is_expired else "black")
             label.pack(side=tk.LEFT, padx=4, pady=4)
 
-            def on_click(inventory_number):
+            # TODO: update list after change
+            change_owner_button = tk.Button(
+                frame,
+                text="Изменить ответственного",
+                command=lambda inventory_number=equipment.inventory_number: EquipmentView.change_owner(inventory_number)
+            )
+            change_owner_button.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def remove_owner(inventory_number):
+                try:  # TODO
+                    equipment_controller.remove_owner(inventory_number)
+                    messagebox.showinfo("Успешно", message="Ответственный удален")
+                    label.config(text=f"{equipment.model_name} {equipment.inventory_number}. "
+                                      "Ответственный: отсутствует"
+                                      f"{'. Подлежит замене' if is_expired else ''}",
+                                 fg="red" if is_expired else "black")
+                except ValueError as e:
+                    messagebox.showerror("Ошибка", message=str(e))
+
+            remove_owner_button = tk.Button(
+                frame,
+                text="Удалить ответственного",
+                command=lambda inventory_number=equipment.inventory_number: remove_owner(inventory_number)
+            )
+            remove_owner_button.pack(side=tk.LEFT, padx=4, pady=4)
+
+            def remove(inventory_number):
                 try:
                     response_message = equipment_controller.remove(inventory_number)
                     messagebox.showinfo("Успешно", message=response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showinfo("Ошибка", message=str(e))
+                    messagebox.showerror("Ошибка", message=str(e))
 
-            button = tk.Button(
+            remove_button = tk.Button(
                 frame,
                 text="Удалить",
-                command=lambda inventory_number=equipment.inventory_number: on_click(inventory_number)
+                command=lambda inventory_number=equipment.inventory_number: remove(inventory_number)
             )
-            button.pack(side=tk.LEFT, padx=4, pady=4)
+            remove_button.pack(side=tk.LEFT, padx=4, pady=4)
 
         window.mainloop()
+
+    @staticmethod
+    def change_owner(inventory_number: str):
+        window = tk.Tk()
+
+        frame = tk.Frame(window)
+        frame.pack()
+
+        users = user_controller.get_all()
+
+        users_ids_by_names_with_indexes = {f"{user['name']} ({user['id']})": user['id'] for user in users}
+
+        user_field = tk.StringVar(window)
+        users_ddl = ttk.Combobox(window, textvariable=user_field, values=list(users_ids_by_names_with_indexes.keys()))
+        users_ddl.pack(padx=4, pady=4)
+
+        def on_click():
+            selected_user = user_field.get()
+
+            if selected_user == "":
+                messagebox.showerror("Ошибка", "Выберите пользователя")
+
+            selected_user_id = users_ids_by_names_with_indexes[selected_user]
+            try:
+                response_message = controllers.EquipmentController.set_owner(inventory_number, int(selected_user_id))
+                messagebox.showinfo("Успешно", response_message)
+            except ValueError as e:
+                messagebox.showerror("Ошибка", str(e))
+
+        submit_button = tk.Button(frame, text="Изменить ответственного", command=on_click)
+        submit_button.pack(side=tk.LEFT, padx=4, pady=4)

@@ -139,6 +139,15 @@ class EquipmentOperations:
             raise ValueError(f"Оборудование {inventory_number} не найдено")
 
     @staticmethod
+    def remove_owner(db: Session, inventory_number: str):
+        equipment = EquipmentOperations.get(db, inventory_number)
+        if equipment is not None:
+            equipment.user_id = None
+            db.commit()
+        else:
+            raise ValueError(f"Оборудование {inventory_number} не найдено")
+
+    @staticmethod
     def remove(db: Session, inventory_number: str):
         equipment = EquipmentOperations.get(db, inventory_number)
         if equipment is not None:
