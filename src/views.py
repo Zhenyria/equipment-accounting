@@ -77,15 +77,15 @@ class UserView:
         window = tk.Tk()
 
         # User name
-        name_label = tk.Label(window, text="Имя пользователя")
-        name_label.pack(padx=4, pady=4)
+        user_name_label = tk.Label(window, text="Имя пользователя")
+        user_name_label.pack(padx=4, pady=4)
 
-        name_field = tk.Entry(window)
-        name_field.pack(padx=4, pady=4)
+        user_name_field = tk.Entry(window)
+        user_name_field.pack(padx=4, pady=4)
 
         # Department
-        dep_label = tk.Label(window, text="Департамент")
-        dep_label.pack(padx=4, pady=4)
+        department_label = tk.Label(window, text="Департамент")
+        department_label.pack(padx=4, pady=4)
 
         departments_names = department_controller.get_all()
 
@@ -93,17 +93,23 @@ class UserView:
         department_ddl = ttk.Combobox(window, textvariable=department_field, values=list(departments_names))
         department_ddl.pack(padx=4, pady=4)
 
-        def on_click():
-            name = name_field.get()
+        def create_user():
+            user_name = user_name_field.get()
+
+            if user_name == "":
+                show_error_window("Имя пользователя не может быть пустым")
+                return
+
             department_name = department_field.get()
 
             try:
-                user_id = user_controller.create(name, department_name)
+                user_id = user_controller.create(user_name, department_name)
                 show_success_window(f"Пользователь {user_id} успешно создан")
+                window.destroy()
             except ValueError as e:
                 show_error_window(str(e))
 
-        button = tk.Button(window, text="Создать пользователя", command=on_click)
+        button = tk.Button(window, text="Создать пользователя", command=create_user)
         button.pack(padx=4, pady=4)
 
         window.mainloop()
@@ -113,25 +119,29 @@ class UserView:
         window = tk.Tk()
 
         users = user_controller.get_all()
-        for user in users:
-            frame = tk.Frame(window)  # TODO: fix removing
+
+        def remove_user(frame, user_id: int):
+            try:
+                response_message = user_controller.remove(user_id)
+                show_success_window(response_message)
+                frame.destroy()
+            except ValueError as e:
+                show_error_window(str(e))
+
+        def create_line(user_data):
+            frame = tk.Frame(window)
             frame.pack()
 
-            label = tk.Label(frame, text=f"{user['department_name']}, {user['name']}")
+            label = tk.Label(frame, text=f"{user_data['department_name']}, {user_data['name']}")
             label.pack(side=tk.LEFT, padx=4, pady=4)
-
-            def on_click(user_id):
-                try:
-                    response_message = user_controller.remove(user_id)
-                    show_success_window(response_message)
-                    frame.destroy()
-                except ValueError as e:
-                    show_error_window(str(e))
 
             button = tk.Button(frame,
                                text="Удалить",
-                               command=lambda user_id=user["id"]: on_click(user_id))
+                               command=lambda: remove_user(frame, user_data["id"]))
             button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        for user in users:
+            create_line(user)
 
         window.mainloop()
 
