@@ -22,15 +22,20 @@ class DepartmentView:
         name_entry = tk.Entry(window)
         name_entry.pack(padx=4, pady=4)
 
-        def on_click():
+        def create_department():
             name = name_entry.get()
+            if name == '':
+                show_error_window("Имя департамента не может быть пустым")
+                return
+
             try:
                 created_department_name = department_controller.create(name)
-                messagebox.showinfo("Успешно", f"Департамент {created_department_name} создан")
+                show_success_window(f"Департамент {created_department_name} создан")
+                window.destroy()
             except ValueError as e:
-                messagebox.showerror("Ошибка", message=str(e))
+                show_error_window(str(e))
 
-        button = tk.Button(window, text="Создать департамент", command=on_click)
+        button = tk.Button(window, text="Создать департамент", command=create_department)
         button.pack(padx=4, pady=4)
 
         window.mainloop()
@@ -40,25 +45,27 @@ class DepartmentView:
         window = tk.Tk()
 
         departments = department_controller.get_all()
-        for department in departments:
-            frame = tk.Frame(window)  # TODO: fix removing
+
+        def remove_department(frame, department_name):
+            try:
+                response_message = department_controller.remove(department_name)
+                show_success_window(response_message)
+                frame.destroy()
+            except ValueError as e:
+                show_error_window(str(e))
+
+        def create_line(department_name):
+            frame = tk.Frame(window)
             frame.pack()
 
-            label = tk.Label(frame, text=str(department))
+            label = tk.Label(frame, text=str(department_name))
             label.pack(side=tk.LEFT, padx=4, pady=4)
 
-            def on_click(department_name):
-                try:
-                    response_message = department_controller.remove(department_name)
-                    messagebox.showinfo("Успешно", message=response_message)
-                    frame.destroy()
-                except ValueError as e:
-                    messagebox.showerror("Ошибка", message=str(e))
-
-            button = tk.Button(frame,
-                               text="Удалить",
-                               command=lambda department_name=department: on_click(department_name))
+            button = tk.Button(frame, text="Удалить", command=lambda: remove_department(frame, department_name))
             button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        for department in departments:
+            create_line(department)
 
         window.mainloop()
 
@@ -92,9 +99,9 @@ class UserView:
 
             try:
                 user_id = user_controller.create(name, department_name)
-                messagebox.showinfo("Выполнено", f"Пользователь {user_id} успешно создан")
+                show_success_window(f"Пользователь {user_id} успешно создан")
             except ValueError as e:
-                messagebox.showerror("Ошибка", message=str(e))
+                show_error_window(str(e))
 
         button = tk.Button(window, text="Создать пользователя", command=on_click)
         button.pack(padx=4, pady=4)
@@ -116,10 +123,10 @@ class UserView:
             def on_click(user_id):
                 try:
                     response_message = user_controller.remove(user_id)
-                    messagebox.showinfo("Успешно", message=response_message)
+                    show_success_window(response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showerror("Ошибка", message=str(e))
+                    show_error_window(str(e))
 
             button = tk.Button(frame,
                                text="Удалить",
@@ -152,9 +159,9 @@ class EquipmentModelView:
             max_term_of_use_in_days = max_term_of_use_in_days_entry.get()
             try:
                 equipment_model_controller.create(name, int(max_term_of_use_in_days))
-                messagebox.showinfo("Успешно", f"Модель оборудования {name} создана")
+                show_success_window(f"Модель оборудования {name} создана")
             except ValueError as e:
-                messagebox.showerror("Ошибка", message=str(e))
+                show_error_window(str(e))
 
         button = tk.Button(window, text="Создать модель оборудования", command=on_click)
         button.pack(padx=4, pady=4)
@@ -176,10 +183,10 @@ class EquipmentModelView:
             def on_click(equipment_model_name):
                 try:
                     response_message = equipment_model_controller.remove(equipment_model_name)
-                    messagebox.showinfo("Успешно", message=response_message)
+                    show_success_window(response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showerror("Ошибка", message=str(e))
+                    show_error_window(str(e))
 
             button = tk.Button(
                 frame,
@@ -219,12 +226,11 @@ class EquipmentView:
             equipment_model = equipment_model_field.get()
             try:
                 equipment_controller.create(inventory_number, equipment_model)
-                messagebox.showinfo(
-                    "Успешно",
+                show_success_window(
                     f"Оборудование {equipment_model} с инвентарным номером {inventory_number} зарегистрировано"
                 )
             except ValueError as e:
-                messagebox.showerror("Ошибка", message=str(e))
+                show_error_window(str(e))
 
         button = tk.Button(window, text="Создать оборудование", command=on_click)
         button.pack(padx=4, pady=4)
@@ -260,13 +266,13 @@ class EquipmentView:
             def remove_owner(inventory_number):
                 try:  # TODO
                     equipment_controller.remove_owner(inventory_number)
-                    messagebox.showinfo("Успешно", message="Ответственный удален")
+                    show_success_window("Ответственный удален")
                     label.config(text=f"{equipment.model_name} {equipment.inventory_number}. "
                                       "Ответственный: отсутствует"
                                       f"{'. Подлежит замене' if is_expired else ''}",
                                  fg="red" if is_expired else "black")
                 except ValueError as e:
-                    messagebox.showerror("Ошибка", message=str(e))
+                    show_error_window(str(e))
 
             remove_owner_button = tk.Button(
                 frame,
@@ -278,10 +284,10 @@ class EquipmentView:
             def remove(inventory_number):
                 try:
                     response_message = equipment_controller.remove(inventory_number)
-                    messagebox.showinfo("Успешно", message=response_message)
+                    show_success_window(response_message)
                     frame.destroy()
                 except ValueError as e:
-                    messagebox.showerror("Ошибка", message=str(e))
+                    show_error_window(str(e))
 
             remove_button = tk.Button(
                 frame,
@@ -311,14 +317,22 @@ class EquipmentView:
             selected_user = user_field.get()
 
             if selected_user == "":
-                messagebox.showerror("Ошибка", "Выберите пользователя")
+                show_error_window("Выберите пользователя")
 
             selected_user_id = users_ids_by_names_with_indexes[selected_user]
             try:
                 response_message = controllers.EquipmentController.set_owner(inventory_number, int(selected_user_id))
-                messagebox.showinfo("Успешно", response_message)
+                show_success_window(response_message)
             except ValueError as e:
-                messagebox.showerror("Ошибка", str(e))
+                show_error_window(str(e))
 
         submit_button = tk.Button(frame, text="Изменить ответственного", command=on_click)
         submit_button.pack(side=tk.LEFT, padx=4, pady=4)
+
+
+def show_success_window(message: str):
+    messagebox.showinfo("Успешно", message)
+
+
+def show_error_window(error_message: str):
+    messagebox.showerror("Ошибка", error_message)
