@@ -152,28 +152,39 @@ class EquipmentModelView:
     def create_view():
         window = tk.Tk()
 
-        name_label = tk.Label(window, text="Название оборудования")
-        name_label.pack(padx=4, pady=4)
+        equipment_name_label = tk.Label(window, text="Название оборудования")
+        equipment_name_label.pack(padx=4, pady=4)
 
-        name_entry = tk.Entry(window)
-        name_entry.pack(padx=4, pady=4)
+        equipment_name_entry = tk.Entry(window)
+        equipment_name_entry.pack(padx=4, pady=4)
 
-        max_term_of_use_in_days_label = tk.Label(window, text="Срок службы оборудования")
-        max_term_of_use_in_days_label.pack(padx=4, pady=4)
+        equipment_max_term_of_use_in_days_label = tk.Label(window, text="Срок службы оборудования")
+        equipment_max_term_of_use_in_days_label.pack(padx=4, pady=4)
 
-        max_term_of_use_in_days_entry = tk.Entry(window)
-        max_term_of_use_in_days_entry.pack(padx=4, pady=4)
+        equipment_max_term_of_use_in_days_entry = tk.Entry(window)
+        equipment_max_term_of_use_in_days_entry.pack(padx=4, pady=4)
 
-        def on_click():
-            name = name_entry.get()
-            max_term_of_use_in_days = max_term_of_use_in_days_entry.get()
+        def create_equipment():
+            equipment_name = equipment_name_entry.get()
+
+            if equipment_name == '':
+                show_error_window("Название оборудования не может быть пустым")
+                return
+
+            equipment_max_term_of_use_in_days = equipment_max_term_of_use_in_days_entry.get()
+
+            if equipment_max_term_of_use_in_days == '':
+                show_error_window("Максимальный срок использования оборудования не может быть пустым")
+                return
+
             try:
-                equipment_model_controller.create(name, int(max_term_of_use_in_days))
-                show_success_window(f"Модель оборудования {name} создана")
+                equipment_model_controller.create(equipment_name, int(equipment_max_term_of_use_in_days))
+                show_success_window(f"Модель оборудования {equipment_name} создана")
+                window.destroy()
             except ValueError as e:
                 show_error_window(str(e))
 
-        button = tk.Button(window, text="Создать модель оборудования", command=on_click)
+        button = tk.Button(window, text="Создать модель оборудования", command=create_equipment)
         button.pack(padx=4, pady=4)
 
         window.mainloop()
@@ -183,27 +194,27 @@ class EquipmentModelView:
         window = tk.Tk()
 
         equipment_models_names = equipment_model_controller.get_all()
-        for equipment_model_name in equipment_models_names:
-            frame = tk.Frame(window)  # TODO: fix removing
+
+        def remove_equipment_model(frame, equipment_model_name):
+            try:
+                response_message = equipment_model_controller.remove(equipment_model_name)
+                show_success_window(response_message)
+                frame.destroy()
+            except ValueError as e:
+                show_error_window(str(e))
+
+        def create_line(equipment_model):
+            frame = tk.Frame(window)
             frame.pack()
 
-            label = tk.Label(frame, text=equipment_model_name)
+            label = tk.Label(frame, text=equipment_model)
             label.pack(side=tk.LEFT, padx=4, pady=4)
 
-            def on_click(equipment_model_name):
-                try:
-                    response_message = equipment_model_controller.remove(equipment_model_name)
-                    show_success_window(response_message)
-                    frame.destroy()
-                except ValueError as e:
-                    show_error_window(str(e))
-
-            button = tk.Button(
-                frame,
-                text="Удалить",
-                command=lambda removed_equipment_model_name=equipment_model_name: on_click(removed_equipment_model_name)
-            )
+            button = tk.Button(frame, text="Удалить", command=lambda: remove_equipment_model(frame, equipment_model))
             button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        for equipment_model_name in equipment_models_names:
+            create_line(equipment_model_name)
 
         window.mainloop()
 
