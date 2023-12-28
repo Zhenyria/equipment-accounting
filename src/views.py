@@ -322,6 +322,7 @@ class EquipmentView:
                                                                                  int(selected_user_id))
                     show_success_window(response_message)
                     change_owner_window.destroy()
+                    update_window(window, lambda: EquipmentView.get_all_view())
                 except ValueError as e:
                     show_error_window(str(e))
 
@@ -360,6 +361,11 @@ class EquipmentView:
             create_line(equipment)
 
         window.mainloop()
+
+
+def update_window(window, function):
+    window.destroy()
+    function()
 
 
 def show_success_window(message: str):
