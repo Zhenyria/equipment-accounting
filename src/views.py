@@ -242,18 +242,29 @@ class EquipmentView:
         equipment_model_ddl = ttk.Combobox(window, textvariable=equipment_model_field, values=list(equipment_models))
         equipment_model_ddl.pack(padx=4, pady=4)
 
-        def on_click():
+        def create_equipment():
             inventory_number = inventory_number_entry.get()
+
+            if inventory_number == "":
+                show_error_window("Введите инвентарный номер")
+                return
+
             equipment_model = equipment_model_field.get()
+
+            if equipment_model == "":
+                show_error_window("Выберите модель оборудования")
+                return
+
             try:
                 equipment_controller.create(inventory_number, equipment_model)
                 show_success_window(
                     f"Оборудование {equipment_model} с инвентарным номером {inventory_number} зарегистрировано"
                 )
+                window.destroy()
             except ValueError as e:
                 show_error_window(str(e))
 
-        button = tk.Button(window, text="Создать оборудование", command=on_click)
+        button = tk.Button(window, text="Создать оборудование", command=create_equipment)
         button.pack(padx=4, pady=4)
 
         window.mainloop()
@@ -263,92 +274,92 @@ class EquipmentView:
         window = tk.Tk()
 
         equipments = equipment_controller.get_all()
-        for equipment in equipments:
-            frame = tk.Frame(window)  # TODO: fix removing. variables scope is other in python
+
+        def remove_owner(label, inventory_number: str, is_expired: bool):
+            try:
+                equipment_controller.remove_owner(inventory_number)
+                show_success_window("Ответственный удален")
+                label.config(text=f"{equipment.model_name} {equipment.inventory_number}. Ответственный: отсутствует"
+                                  f"{'. Подлежит замене' if is_expired else ''}",
+                             fg="red" if is_expired else "black")
+            except ValueError as e:
+                show_error_window(str(e))
+
+        def remove_equipment(frame, inventory_number: str):
+            try:
+                response_message = equipment_controller.remove(inventory_number)
+                show_success_window(response_message)
+                frame.destroy()
+            except ValueError as e:
+                show_error_window(str(e))
+
+        def change_owner(inventory_number: str):
+            change_owner_window = tk.Tk()
+
+            frame = tk.Frame(change_owner_window)
             frame.pack()
 
+            users = user_controller.get_all()
+
+            users_ids_by_names_with_indexes = {f"{user['name']} ({user['id']})": user['id'] for user in users}
+
+            user_field = tk.StringVar(frame)
+            users_ddl = ttk.Combobox(frame,
+                                     textvariable=user_field,
+                                     values=list(users_ids_by_names_with_indexes.keys()))
+            users_ddl.pack(padx=4, pady=4)
+
+            def change_owner_for_selected_user():
+                selected_user = user_field.get()
+
+                if selected_user == "":
+                    show_error_window("Выберите пользователя")
+                    return
+
+                selected_user_id = users_ids_by_names_with_indexes[selected_user]
+                try:
+                    response_message = controllers.EquipmentController.set_owner(inventory_number,
+                                                                                 int(selected_user_id))
+                    show_success_window(response_message)
+                    change_owner_window.destroy()
+                except ValueError as e:
+                    show_error_window(str(e))
+
+            submit_button = tk.Button(frame, text="Изменить ответственного", command=change_owner_for_selected_user)
+            submit_button.pack(side=tk.LEFT, padx=4, pady=4)
+
+        def create_line(equipment):
+            frame = tk.Frame(window)
+            frame.pack()
+
+            inventory_number = equipment.inventory_number
             owner_name = equipment.user_name
             is_expired = equipment.is_expired
+
             label = tk.Label(frame,
-                             text=f"{equipment.model_name} {equipment.inventory_number}. "
+                             text=f"{equipment.model_name} {inventory_number}. "
                                   f"Ответственный: {owner_name if owner_name is not None else 'отсутствует'}"
                                   f"{'. Подлежит замене' if is_expired else ''}",
                              fg="red" if is_expired else "black")
             label.pack(side=tk.LEFT, padx=4, pady=4)
 
-            # TODO: update list after change
-            change_owner_button = tk.Button(
-                frame,
-                text="Изменить ответственного",
-                command=lambda inventory_number=equipment.inventory_number: EquipmentView.change_owner(inventory_number)
-            )
+            change_owner_button = tk.Button(frame,
+                                            text="Изменить ответственного",
+                                            command=lambda: change_owner(inventory_number))
             change_owner_button.pack(side=tk.LEFT, padx=4, pady=4)
 
-            def remove_owner(inventory_number):
-                try:  # TODO
-                    equipment_controller.remove_owner(inventory_number)
-                    show_success_window("Ответственный удален")
-                    label.config(text=f"{equipment.model_name} {equipment.inventory_number}. "
-                                      "Ответственный: отсутствует"
-                                      f"{'. Подлежит замене' if is_expired else ''}",
-                                 fg="red" if is_expired else "black")
-                except ValueError as e:
-                    show_error_window(str(e))
-
-            remove_owner_button = tk.Button(
-                frame,
-                text="Удалить ответственного",
-                command=lambda inventory_number=equipment.inventory_number: remove_owner(inventory_number)
-            )
+            remove_owner_button = tk.Button(frame,
+                                            text="Удалить ответственного",
+                                            command=lambda: remove_owner(label, inventory_number, is_expired))
             remove_owner_button.pack(side=tk.LEFT, padx=4, pady=4)
 
-            def remove(inventory_number):
-                try:
-                    response_message = equipment_controller.remove(inventory_number)
-                    show_success_window(response_message)
-                    frame.destroy()
-                except ValueError as e:
-                    show_error_window(str(e))
-
-            remove_button = tk.Button(
-                frame,
-                text="Удалить",
-                command=lambda inventory_number=equipment.inventory_number: remove(inventory_number)
-            )
+            remove_button = tk.Button(frame, text="Удалить", command=lambda: remove_equipment(frame, inventory_number))
             remove_button.pack(side=tk.LEFT, padx=4, pady=4)
 
+        for equipment in equipments:
+            create_line(equipment)
+
         window.mainloop()
-
-    @staticmethod
-    def change_owner(inventory_number: str):
-        window = tk.Tk()
-
-        frame = tk.Frame(window)
-        frame.pack()
-
-        users = user_controller.get_all()
-
-        users_ids_by_names_with_indexes = {f"{user['name']} ({user['id']})": user['id'] for user in users}
-
-        user_field = tk.StringVar(window)
-        users_ddl = ttk.Combobox(window, textvariable=user_field, values=list(users_ids_by_names_with_indexes.keys()))
-        users_ddl.pack(padx=4, pady=4)
-
-        def on_click():
-            selected_user = user_field.get()
-
-            if selected_user == "":
-                show_error_window("Выберите пользователя")
-
-            selected_user_id = users_ids_by_names_with_indexes[selected_user]
-            try:
-                response_message = controllers.EquipmentController.set_owner(inventory_number, int(selected_user_id))
-                show_success_window(response_message)
-            except ValueError as e:
-                show_error_window(str(e))
-
-        submit_button = tk.Button(frame, text="Изменить ответственного", command=on_click)
-        submit_button.pack(side=tk.LEFT, padx=4, pady=4)
 
 
 def show_success_window(message: str):
